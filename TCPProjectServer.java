@@ -53,10 +53,15 @@ public class TCPProjectServer {
                     socketChannel.write(replyBuffer4);
                     break;
                 case "R":
+                    int bytesRead1 = socketChannel.read(buffer);
+                    buffer.flip();
+                    byte[] a2 = new byte[bytesRead1];
+                    buffer.get(a2);
+                    String clientMessage2 = new String(a);
+                    System.out.println("Line 64: "+ clientMessage2);
                     String str2 = "File name?";
                     ByteBuffer replyBuffer3 = ByteBuffer.wrap(str2.getBytes());
                     socketChannel.write(replyBuffer3);
-
                     break;
                 case "L":
                     StringBuilder file_list = new StringBuilder();

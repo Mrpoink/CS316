@@ -54,6 +54,11 @@ public class TCPProjectClient {
                         ByteBuffer buffer2 = ByteBuffer.wrap(message.getBytes());
                         int bytesWritten2 = channel.write(buffer2);
                         System.out.println(bytesWritten2);
+
+                        int bytesRead2 = channel.read(replyBuffer);
+                        byte[] b = new byte[bytesRead2];
+                        replyBuffer.get(b);
+                        System.out.println(new String(b));
                 }
             }
             replyBuffer.clear();
