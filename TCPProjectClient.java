@@ -59,6 +59,22 @@ public class TCPProjectClient {
                         byte[] b = new byte[bytesRead2];
                         replyBuffer.get(b);
                         System.out.println("Server said: " + new String(b));
+                    case "Insert New Name:":
+                        // Send the content to append
+                        String content = keyboard.nextLine();
+                        ByteBuffer contentBuffer = ByteBuffer.wrap(content.getBytes());
+                        channel.write(contentBuffer);
+
+                        // Wait for the server's success/error message
+                        replyBuffer.clear();
+                        bytesRead = channel.read(replyBuffer);
+                        if (bytesRead > 0) {
+                            replyBuffer.flip();
+                            byte[] resultBytes = new byte[bytesRead];
+                            replyBuffer.get(resultBytes);
+                            String result = new String(resultBytes);
+                            System.out.println(result);
+                        }
                 }
             }
             replyBuffer.clear();

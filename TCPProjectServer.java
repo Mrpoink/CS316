@@ -47,10 +47,50 @@ public class TCPProjectServer {
                     ByteBuffer replyBuffer5 = ByteBuffer.wrap(str4.getBytes());
                     socketChannel.write(replyBuffer5);
                     break;
-                case "A":
-                    String str3 = "APPEND";
-                    ByteBuffer replyBuffer4 = ByteBuffer.wrap(str3.getBytes());
+                case "A": // Append / Change File Name
+                    // Ask user what file to rename
+                    String file_request = "File name?";
+                    ByteBuffer replyBuffer4 = ByteBuffer.wrap(file_request.getBytes());
                     socketChannel.write(replyBuffer4);
+                    // Read the file name from the client
+                    ByteBuffer fileNameBuffer = ByteBuffer.allocate(1024);
+                    int fileNameBytesRead = socketChannel.read(fileNameBuffer);
+                    fileNameBuffer.flip();
+                    byte[] fileNameBytes = new byte[fileNameBytesRead];
+                    fileNameBuffer.get(fileNameBytes);
+                    String fileName = new String(fileNameBytes);
+                    fileNameBuffer.clear();
+                    // ask user the new name
+                    String contentPrompt = "Insert New Name:";
+                    ByteBuffer contentPromptBuffer = ByteBuffer.wrap(contentPrompt.getBytes());
+                    socketChannel.write(contentPromptBuffer);
+                    // Reads user response to rename
+                    ByteBuffer contentBuffer = ByteBuffer.allocate(1024);
+                    int contentBytesRead = socketChannel.read(contentBuffer);
+                    contentBuffer.flip();
+                    byte[] contentBytes = new byte[contentBytesRead];
+                    contentBuffer.get(contentBytes);
+                    String appendContent = new String(contentBytes);
+                    contentBuffer.clear();
+                    // Rename and move file within "Server Files"
+                    try {
+                        Path oldFilePath = Paths.get(filepath, fileName);
+                        Path newFilePath = Paths.get(filepath, appendContent);
+                        if (Files.exists(oldFilePath)) {
+                            Files.move(oldFilePath, newFilePath, StandardCopyOption.REPLACE_EXISTING);
+                            String successMessage = "File renamed successfully and placed in Server Files.";
+                            ByteBuffer successBuffer = ByteBuffer.wrap(successMessage.getBytes());
+                            socketChannel.write(successBuffer);
+                        } else {
+                            String errorMessage = "File not found.";
+                            ByteBuffer errorBuffer = ByteBuffer.wrap(errorMessage.getBytes());
+                            socketChannel.write(errorBuffer);
+                        }
+                    } catch (IOException e) {
+                        String errorMessage = "Error renaming file: " + e.getMessage();
+                        ByteBuffer errorBuffer = ByteBuffer.wrap(errorMessage.getBytes());
+                        socketChannel.write(errorBuffer);
+                    }
                     break;
                 case "R":
                     int bytesRead1 = socketChannel.read(buffer);
