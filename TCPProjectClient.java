@@ -48,17 +48,17 @@ public class TCPProjectClient {
                         System.exit(0);
                         break;
                     case "File name?":
-                        buffer.clear();
                         System.out.println("Enter here: ");
                         String filename = keyboard.nextLine();
-                        ByteBuffer buffer2 = ByteBuffer.wrap(message.getBytes());
-                        int bytesWritten2 = channel.write(buffer2);
-                        System.out.println(bytesWritten2);
+                        ByteBuffer buffer2 = ByteBuffer.wrap(filename.getBytes());
+                        channel.write(buffer2);
 
+                        replyBuffer.clear();
                         int bytesRead2 = channel.read(replyBuffer);
+                        replyBuffer.flip();
                         byte[] b = new byte[bytesRead2];
                         replyBuffer.get(b);
-                        System.out.println(new String(b));
+                        System.out.println("Server said: " + new String(b));
                 }
             }
             replyBuffer.clear();

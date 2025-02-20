@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.io.FileInputStream;
@@ -18,18 +19,17 @@ public class TCPProjectServer {
         SocketChannel socketChannel = listenChannel.accept();
 
         while (true) {
-            System.out.println("Line 20");
+            System.out.println("Line 21");
 
-            System.out.println("Line 21 complete");
+            System.out.println("Line 23 complete");
             ByteBuffer buffer = ByteBuffer.allocate(1024);
             int bytesRead = socketChannel.read(buffer);
-            System.out.println("Line 24 complete");
+            System.out.println("Line 26 complete");
             buffer.flip();
             byte[] a = new byte[bytesRead];
             buffer.get(a);
             String clientMessage = new String(a);
-            System.out.println("Line 29: "+ clientMessage);
-            buffer.clear();
+            System.out.println("Line 31: "+ clientMessage);
             switch(clientMessage){
                 case "E":
                     String str6 = "CLOSING CONNECTION";
@@ -62,6 +62,24 @@ public class TCPProjectServer {
                     String str2 = "File name?";
                     ByteBuffer replyBuffer3 = ByteBuffer.wrap(str2.getBytes());
                     socketChannel.write(replyBuffer3);
+                    ByteBuffer remove_buffer = ByteBuffer.allocate(1024);
+                    int remove_bytes = socketChannel.read(remove_buffer);
+                    System.out.println("File name read");
+                    remove_buffer.flip();
+                    byte[] a3 = new byte[remove_bytes];
+                    remove_buffer.get(a3);
+                    System.out.println(new String(a3));
+                    String clientMessage3 = new String(a3);
+                    System.out.println("File deleting: "+ clientMessage3);
+                    File filetodelete = new File(filepath + clientMessage3);
+                    if (filetodelete.exists()) {
+                        filetodelete.delete();
+                    }else{
+                        String error = "File not found, sending error";
+                        System.out.println(error);
+                        ByteBuffer reply4 = ByteBuffer.wrap(error.getBytes());
+                        socketChannel.write(reply4);
+                    }
                     break;
                 case "L":
                     StringBuilder file_list = new StringBuilder();
