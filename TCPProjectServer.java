@@ -37,9 +37,53 @@ public class TCPProjectServer {
                     socketChannel.close();
                     break;
                 case "U":
-                    String str5 = "UPLOAD";
-                    ByteBuffer replyBuffer6 = ByteBuffer.wrap(str5.getBytes());
-                    socketChannel.write(replyBuffer6);
+                    String uploadPrompt = "Enter file name:";
+                    ByteBuffer uploadPromptBuffer = ByteBuffer.wrap(uploadPrompt.getBytes());
+                    socketChannel.write(uploadPromptBuffer);
+
+                    // Read file name
+                    ByteBuffer fileNameBufferUpload = ByteBuffer.allocate(1024);
+                    int fileNameBytesUpload = socketChannel.read(fileNameBufferUpload);
+                    fileNameBufferUpload.flip();
+                    byte[] fileNameBytesArr = new byte[fileNameBytesUpload];
+                    fileNameBufferUpload.get(fileNameBytesArr);
+                    String fileNameUpload = new String(fileNameBytesArr);
+                    fileNameBufferUpload.clear();
+
+                    String filePathUpload = filepath + fileNameUpload;
+
+                    // Ask for file size
+                    String fileSizePrompt = "Enter file size:";
+                    ByteBuffer fileSizePromptBuffer = ByteBuffer.wrap(fileSizePrompt.getBytes());
+                    socketChannel.write(fileSizePromptBuffer);
+
+                    ByteBuffer filesizeBuffer = ByteBuffer.allocate(8);
+                    socketChannel.read(filesizeBuffer);
+                    filesizeBuffer.flip();
+                    long filesize = filesizeBuffer.getLong();
+
+                    FileOutputStream fileOutputStream = new FileOutputStream(filePathUpload);
+                    FileChannel fileChannelUpload = fileOutputStream.getChannel();
+
+                    ByteBuffer fileBuffer = ByteBuffer.allocate(1024);
+                    long bytesReceived = 0;
+
+                    while (bytesReceived < filesize) {
+                        fileBuffer.clear();
+                        int bytesReadUpload = socketChannel.read(fileBuffer);
+                        if (bytesReadUpload == -1) break;
+                        bytesReceived += bytesReadUpload;
+
+                        fileBuffer.flip();
+                        fileChannelUpload.write(fileBuffer);
+                    }
+
+                    fileChannelUpload.close();
+                    fileOutputStream.close();
+
+                    String uploadSuccess = "File uploaded successfully!";
+                    ByteBuffer uploadSuccessBuffer = ByteBuffer.wrap(uploadSuccess.getBytes());
+                    socketChannel.write(uploadSuccessBuffer);
                     break;
                 case "D":
                     String str4 = "File name for download?";

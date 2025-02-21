@@ -1,3 +1,5 @@
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -117,6 +119,59 @@ public class TCPProjectClient {
                             String result = new String(resultBytes);
                             System.out.println(result);
                         }
+                    case "Enter file name:": // Upload case
+                        System.out.print("Enter filename to upload: ");
+                        String uploadFileName = keyboard.nextLine();
+                        File uploadFile = new File(filepath + uploadFileName);
+
+                        if (!uploadFile.exists()) {
+                            System.out.println("File not found.");
+                            break;
+                        }
+
+                        ByteBuffer uploadFileNameBuffer = ByteBuffer.wrap(uploadFileName.getBytes());
+                        channel.write(uploadFileNameBuffer);
+
+                        // Receive file size request
+                        replyBuffer.clear();
+                        bytesRead = channel.read(replyBuffer);
+                        replyBuffer.flip();
+                        String fileSizePrompt = new String(replyBuffer.array(), 0, bytesRead);
+                        System.out.println(fileSizePrompt);
+
+                        long uploadFileSize = uploadFile.length();
+                        ByteBuffer fileSizeBuffer = ByteBuffer.allocate(8);
+                        fileSizeBuffer.putLong(uploadFileSize);
+                        fileSizeBuffer.flip();
+                        channel.write(fileSizeBuffer);
+
+                        FileInputStream fileInputStream = new FileInputStream(uploadFile);
+                        FileChannel fileUploadChannel = fileInputStream.getChannel();
+                        ByteBuffer uploadBuffer = ByteBuffer.allocate(1024);
+                        long bytesSent = 0;
+
+                        System.out.println("Uploading file: " + uploadFileName);
+
+                        while (bytesSent < uploadFileSize) {
+                            uploadBuffer.clear();
+                            int bytesReadUpload = fileUploadChannel.read(uploadBuffer);
+                            if (bytesReadUpload == -1) break;
+                            bytesSent += bytesReadUpload;
+                            uploadBuffer.flip();
+                            channel.write(uploadBuffer);
+                        }
+
+                        fileUploadChannel.close();
+                        fileInputStream.close();
+
+                        // Receive success message
+                        replyBuffer.clear();
+                        bytesRead = channel.read(replyBuffer);
+                        replyBuffer.flip();
+                        System.out.println(new String(replyBuffer.array(), 0, bytesRead));
+
+                        System.out.println("Upload complete.");
+                        break;
                 }
             }
             replyBuffer.clear();
