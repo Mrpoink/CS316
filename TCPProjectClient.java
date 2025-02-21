@@ -1,3 +1,4 @@
+import java.io.FileOutputStream;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -9,6 +10,7 @@ public class TCPProjectClient {
             System.out.println("Please provide <serverIP> and <serverPort>");
             return;
         }
+        final String filepath = "Client Files/";
         int serverPort = Integer.parseInt(args[1]);
         SocketChannel channel = SocketChannel.open();
         channel.connect(
@@ -47,8 +49,31 @@ public class TCPProjectClient {
                     case "CLOSING CONNECTION":
                         System.exit(0);
                         break;
+                    case "File name for download?":
+                        System.out.print("Enter here: ");
+                        String filename2 = keyboard.nextLine();
+                        ByteBuffer buffer3 = ByteBuffer.wrap(filename2.getBytes());
+                        channel.write(buffer3);
+
+                        ByteBuffer download_file = ByteBuffer.allocate(1024);
+                        int download_bytes = channel.read(download_file);
+                        download_file.flip();
+                        byte[] bytes_downloaded = new byte[download_bytes];
+                        download_file.get(bytes_downloaded);
+                        String downloaded_file = new String(bytes_downloaded);
+                        if (downloaded_file.equals("File not found error")){
+                            System.out.println("File not found");
+                            break;
+                        }else {
+                            System.out.println("File being downloaded: " +filename2);
+                        }
+
+                        FileOutputStream fileOutStream = new FileOutputStream(filepath + filename2);
+                        fileOutStream.write(bytes_downloaded);
+
+                        break;
                     case "File name?":
-                        System.out.println("Enter here: ");
+                        System.out.print("Enter here: ");
                         String filename = keyboard.nextLine();
                         ByteBuffer buffer2 = ByteBuffer.wrap(filename.getBytes());
                         channel.write(buffer2);

@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.*;
 import java.io.FileInputStream;
@@ -43,9 +44,30 @@ public class TCPProjectServer {
                     socketChannel.write(replyBuffer6);
                     break;
                 case "D":
-                    String str4 = "DOWNLOAD";
-                    ByteBuffer replyBuffer5 = ByteBuffer.wrap(str4.getBytes());
-                    socketChannel.write(replyBuffer5);
+                    String str4 = "File name for download?";
+                    ByteBuffer sendBuffer = ByteBuffer.wrap(str4.getBytes());
+                    socketChannel.write(sendBuffer);
+                    ByteBuffer replyBuffer5 = ByteBuffer.allocate(1024);
+                    int download_reply_bytes = socketChannel.read(replyBuffer5);
+                    replyBuffer5.flip();
+
+                    byte[] download_reply = new byte[download_reply_bytes];
+                    replyBuffer5.get(download_reply);
+                    System.out.println("Client said: " + new String(download_reply));
+                    replyBuffer5.clear();
+
+                    String download_file = new String(download_reply);
+                    File download_file_file = new File(filepath + download_file);
+                    if (!download_file_file.exists()){
+                        ByteBuffer downloadError = ByteBuffer.wrap("File not found error".getBytes());
+                        socketChannel.write(downloadError);
+                    }else{
+                        FileInputStream fileInputStream = new FileInputStream(download_file_file);
+                        byte[] download_file_bytes = new byte[(int) download_reply.length];
+                        fileInputStream.read(download_file_bytes);
+                        ByteBuffer download_file_buffer = ByteBuffer.wrap(download_file_bytes);
+                        socketChannel.write(download_file_buffer);
+                    }
                     break;
                 case "A": // Append / Change File Name
                     // Ask user what file to rename
@@ -97,7 +119,7 @@ public class TCPProjectServer {
                     buffer.flip();
                     byte[] a2 = new byte[bytesRead1];
                     buffer.get(a2);
-                    String clientMessage2 = new String(a);
+                    String clientMessage2 = new String(a2);
                     System.out.println("Line 64: "+ clientMessage2);
                     String str2 = "File name?";
                     ByteBuffer replyBuffer3 = ByteBuffer.wrap(str2.getBytes());
@@ -108,7 +130,6 @@ public class TCPProjectServer {
                     remove_buffer.flip();
                     byte[] a3 = new byte[remove_bytes];
                     remove_buffer.get(a3);
-                    System.out.println(new String(a3));
                     String clientMessage3 = new String(a3);
                     System.out.println("File deleting: "+ clientMessage3);
                     File filetodelete = new File(filepath + clientMessage3);
