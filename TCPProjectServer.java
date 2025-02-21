@@ -145,9 +145,8 @@ public class TCPProjectServer {
                     }
                     break;
                 case "L":
-                    StringBuilder file_list = new StringBuilder();
                     try (Stream<Path> paths = Files.walk(Paths.get(filepath))){
-                        file_list = new StringBuilder(paths
+                        StringBuilder file_list = new StringBuilder(paths
                                 .filter(Files::isRegularFile)
                                 .map(path -> path.getFileName().toString())
                                 .collect(Collectors.joining(",")));
