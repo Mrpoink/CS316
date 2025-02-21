@@ -58,22 +58,33 @@ public class TCPProjectServer {
                     File download_file_file = new File(filepath + download_file);
                     if (!download_file_file.exists()){
                         System.out.println("User entered wrong filename");
-                        ByteBuffer downloadError = ByteBuffer.wrap("File not found error".getBytes());
+                        ByteBuffer downloadError = ByteBuffer.wrap(ByteBuffer.allocate(8).putLong(-1).array());
                         socketChannel.write(downloadError);
+                        break;
                     }else{
-                        ByteBuffer download_file_buffer = ByteBuffer.allocate(1024);
-                        int bytes_read = 0;
+                        long fileSize = download_file_file.length();
+                        ByteBuffer fileSizeBuffer = ByteBuffer.wrap(ByteBuffer.allocate(8).putLong(fileSize).array());
+                        socketChannel.write(fileSizeBuffer);
+
                         FileInputStream fileInputStream = new FileInputStream(download_file_file);
-                        FileChannel fc = fileInputStream.getChannel();
-                        do {
-                            bytes_read = fc.read(download_file_buffer);
-                            download_file_buffer.flip();
-                            socketChannel.write(download_file_buffer);
-                            download_file_buffer.clear();
-                        }while (bytes_read <= 0);
+                        FileChannel fileChannel = fileInputStream.getChannel();
+                        ByteBuffer download_file_buffer = ByteBuffer.allocate(1024);
+                        int byteread;
+
+                        do{
+                            byteread = fileChannel.read(download_file_buffer);
+                            if (byteread > 0){
+                                download_file_buffer.flip();
+                                while (download_file_buffer.hasRemaining()){
+                                    socketChannel.write(download_file_buffer);
+                                }
+                                download_file_buffer.clear();
+                            }
+                        }while (byteread >= 0);
+                        fileChannel.close();
                         fileInputStream.close();
+                        break;
                     }
-                    break;
                 case "A": // Append / Change File Name
                     // Ask user what file to rename
                     String file_request = "File name?";

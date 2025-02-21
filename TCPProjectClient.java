@@ -3,6 +3,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 public class TCPProjectClient {
@@ -57,15 +58,34 @@ public class TCPProjectClient {
                         ByteBuffer buffer3 = ByteBuffer.wrap(filename2.getBytes());
                         channel.write(buffer3);
 
-                        ByteBuffer download_file = ByteBuffer.allocate(1024);
+                        ByteBuffer download_file = ByteBuffer.allocate(8);
+                        channel.read(download_file);
+                        download_file.flip();
+                        long fileStatus = download_file.getLong();
+
+                        if (fileStatus == -1){
+                            System.out.println("No file found");
+                            break;
+                        }
+
                         FileOutputStream fileOutStream = new FileOutputStream(filepath + filename2);
-                        FileChannel fc = fileOutStream.getChannel();
-                        System.out.println("File being downloaded: " + filename2);
-                        do{
-                            download_file.flip();
-                            fc.write(download_file);
-                            download_file.clear();
-                        }while(channel.read(download_file) >= 0);
+                        FileChannel fileChannel = fileOutStream.getChannel();
+
+                        System.out.println("File being downloaded: " +filename2);
+
+                        ByteBuffer download_buffer = ByteBuffer.allocate(1024);
+                        int bytesread = 0;
+                        while (bytesread < fileStatus){
+                            int currentbytes = channel.read(download_buffer);
+                            if (currentbytes == -1){
+                                break;
+                            }
+                            download_buffer.flip();
+                            bytesread += currentbytes;
+                            fileChannel.write(download_buffer);
+                            download_buffer.flip();
+                        }
+                        fileChannel.close();
                         fileOutStream.close();
                         break;
                     case "File name?":
