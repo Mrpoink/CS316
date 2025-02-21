@@ -61,11 +61,17 @@ public class TCPProjectServer {
                         ByteBuffer downloadError = ByteBuffer.wrap("File not found error".getBytes());
                         socketChannel.write(downloadError);
                     }else{
+                        ByteBuffer download_file_buffer = ByteBuffer.allocate(1024);
+                        int bytes_read = 0;
                         FileInputStream fileInputStream = new FileInputStream(download_file_file);
-                        byte[] download_file_bytes = new byte[(int) download_reply.length];
-                        fileInputStream.read(download_file_bytes);
-                        ByteBuffer download_file_buffer = ByteBuffer.wrap(download_file_bytes);
-                        socketChannel.write(download_file_buffer);
+                        FileChannel fc = fileInputStream.getChannel();
+                        do {
+                            bytes_read = fc.read(download_file_buffer);
+                            download_file_buffer.flip();
+                            socketChannel.write(download_file_buffer);
+                            download_file_buffer.clear();
+                        }while (bytes_read <= 0);
+                        fileInputStream.close();
                     }
                     break;
                 case "A": // Append / Change File Name

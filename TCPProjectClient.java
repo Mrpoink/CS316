@@ -1,6 +1,7 @@
 import java.io.FileOutputStream;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Scanner;
 
@@ -57,21 +58,15 @@ public class TCPProjectClient {
                         channel.write(buffer3);
 
                         ByteBuffer download_file = ByteBuffer.allocate(1024);
-                        int download_bytes = channel.read(download_file);
-                        download_file.flip();
-                        byte[] bytes_downloaded = new byte[download_bytes];
-                        download_file.get(bytes_downloaded);
-                        String downloaded_file = new String(bytes_downloaded);
-                        if (downloaded_file.equals("File not found error")){
-                            System.out.println("File not found");
-                            break;
-                        }else {
-                            System.out.println("File being downloaded: " +filename2);
-                        }
-
                         FileOutputStream fileOutStream = new FileOutputStream(filepath + filename2);
-                        fileOutStream.write(bytes_downloaded);
-
+                        FileChannel fc = fileOutStream.getChannel();
+                        System.out.println("File being downloaded: " + filename2);
+                        do{
+                            download_file.flip();
+                            fc.write(download_file);
+                            download_file.clear();
+                        }while(channel.read(download_file) >= 0);
+                        fileOutStream.close();
                         break;
                     case "File name?":
                         System.out.print("Enter here: ");
