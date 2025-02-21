@@ -20,17 +20,15 @@ public class TCPProjectServer {
         SocketChannel socketChannel = listenChannel.accept();
 
         while (true) {
-            System.out.println("Line 21");
 
-            System.out.println("Line 23 complete");
             ByteBuffer buffer = ByteBuffer.allocate(1024);
             int bytesRead = socketChannel.read(buffer);
-            System.out.println("Line 26 complete");
+
             buffer.flip();
             byte[] a = new byte[bytesRead];
             buffer.get(a);
             String clientMessage = new String(a);
-            System.out.println("Line 31: "+ clientMessage);
+            System.out.println("Client command: "+ clientMessage);
             switch(clientMessage){
                 case "E":
                     String str6 = "CLOSING CONNECTION";
@@ -53,12 +51,13 @@ public class TCPProjectServer {
 
                     byte[] download_reply = new byte[download_reply_bytes];
                     replyBuffer5.get(download_reply);
-                    System.out.println("Client said: " + new String(download_reply));
+                    System.out.println("Client wants: " + new String(download_reply));
                     replyBuffer5.clear();
 
                     String download_file = new String(download_reply);
                     File download_file_file = new File(filepath + download_file);
                     if (!download_file_file.exists()){
+                        System.out.println("User entered wrong filename");
                         ByteBuffer downloadError = ByteBuffer.wrap("File not found error".getBytes());
                         socketChannel.write(downloadError);
                     }else{
@@ -133,13 +132,16 @@ public class TCPProjectServer {
                     String clientMessage3 = new String(a3);
                     System.out.println("File deleting: "+ clientMessage3);
                     File filetodelete = new File(filepath + clientMessage3);
-                    if (filetodelete.exists()) {
-                        filetodelete.delete();
-                    }else{
+                    if (!filetodelete.exists()) {
                         String error = "File not found, sending error";
                         System.out.println(error);
                         ByteBuffer reply4 = ByteBuffer.wrap(error.getBytes());
                         socketChannel.write(reply4);
+
+                    }else{
+                        filetodelete.delete();
+                        ByteBuffer reply5 = ByteBuffer.wrap("File deleted successfully".getBytes());
+                        socketChannel.write(reply5);
                     }
                     break;
                 case "L":
@@ -149,11 +151,20 @@ public class TCPProjectServer {
                                 .filter(Files::isRegularFile)
                                 .map(path -> path.getFileName().toString())
                                 .collect(Collectors.joining(",")));
+                        if (file_list.isEmpty()){
+                            ByteBuffer replyBuffer2 = ByteBuffer.wrap("Filepath is empty".getBytes());
+                            socketChannel.write(replyBuffer2);
+                            break;
+                        }
                         ByteBuffer replyBuffer2 = ByteBuffer.wrap(file_list.toString().getBytes());
                         socketChannel.write(replyBuffer2);
                     }catch (IOException e){
                         e.printStackTrace();
                     }
+                    break;
+                default:
+                    ByteBuffer default_response = ByteBuffer.wrap("Incorrect command".getBytes());
+                    socketChannel.write(default_response);
                     break;
             }
         }

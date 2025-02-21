@@ -17,6 +17,7 @@ public class TCPProjectClient {
                 new InetSocketAddress(args[0], serverPort)
         );
         while(true) {
+            System.out.println("______________________");
             System.out.print("Enter Command from options: \nList('L')\nRemove('R')\nAppend('A')\nDownload('D')\nUpload('U')\nEnd Program('E')\nEnter Here: ");
             Scanner keyboard = new Scanner(System.in);
             String message = keyboard.nextLine();
@@ -84,6 +85,7 @@ public class TCPProjectClient {
                         byte[] b = new byte[bytesRead2];
                         replyBuffer.get(b);
                         System.out.println("Server said: " + new String(b));
+                        break;
                     case "Insert New Name:":
                         // Send the content to append
                         String content = keyboard.nextLine();
